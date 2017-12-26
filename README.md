@@ -1,0 +1,2 @@
+# distance-hamming
+TP IA
