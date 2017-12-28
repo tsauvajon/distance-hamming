@@ -5,6 +5,7 @@ TP d'Intelligence Artificielle
 Thomas Sauvajon
 
 ## Installer Go sur Linux
+
 ``` sh
 # Dernière version stable Linux 64 bits au moment de l'écriture du Readme : go1.9.2.linux-amd64.tar.gz
 # Consulter https://golang.org/dl/ pour versions + récentes
@@ -19,13 +20,15 @@ export PATH=$PATH:/usr/local/go/bin
 Les sources Go doivent se trouver dans le `$GOPATH` (par défaut `$HOME/go`)
 
 Pour le changer :
+
 ``` sh
 export GOPATH=/nouvelle/localisation/du/gopath
 ```
 
-Les projets Go se trouvent tous dans le même dossier, et sont organisés par organisation/username
+Les projets Go se trouvent tous dans le même dossier, et sont organisés par organisation/username.
+
 Par exemple pour ce repo:
-$HOME/go/src/github.com/tsauvajon/distance-hamming
+`$HOME/go/src/github.com/tsauvajon/distance-hamming`.
 
 # Lancement
 ``` sh
@@ -35,15 +38,17 @@ go build
 
 # Utilisation
 
-Pour utiliser le jeu de test de l'énoncé, copier/coller le contenu de `Saisie.txt` dans la console
-Pour utiliser un autre jeu de test, suivre les consignes du programme !
+Pour utiliser le jeu de test de l'énoncé, copier/coller le contenu de `Saisie.txt` dans la console.
+
+Pour utiliser un autre jeu de test, suivre les consignes du programme !.
 
 # Approche
 
 ## Papier + crayon
 
 J'ai commencé par une approche papier avec l'exemple donné (10 exemples, 4 colonnes) :
-Tout d'abord, transformation des exemples en true/false, par exemple clair = true et foncée = false pour rendre l'algorithme plus facile à concevoir.
+Tout d'abord, transformation des exemples en true/false, par exemple
+clair = true et foncée = false pour rendre l'algorithme plus facile à concevoir.
 
 **Matrice d'exemples :**
 
@@ -59,7 +64,8 @@ Tout d'abord, transformation des exemples en true/false, par exemple clair = tru
 9  |  F  |  T  |  T  |  F  |
 10 |  F  |  F  |  T  |  F  |
 
-Ensuite, création d'une matrice de 10 x 10 (symétrique) qui représente la distance de hamming entre chaque paire d'éléments :
+Ensuite, création d'une matrice de 10 x 10 (symétrique) qui représente la
+distance de hamming entre chaque paire d'éléments :
 
 **Distances de hamming :**
 
@@ -79,13 +85,15 @@ Pour calculer les valeurs, j'ai calculé les différences manuellement entre 2 l
 
 Par exemple, la ligne d'exemple 1 et la ligne d'exemple 6 ont une valeur commune et trois valeurs difféntes.
 
-J'inscris donc 3 comme valeur pour [1, 6] et [6, 1]
+J'inscris donc 3 comme valeur pour [1, 6] et [6, 1].
+
+Je répète ces étapes jusqu'à ce que ma matrice soit complète.
 
 ## Clustering
 
 J'ai ensuite séparé ces données en 2 clusters :
 pour celà, j'ai essayé de regrouper au maximum les éléments ayant une distance faible entre eux (1), et
-de mettre dans des clusters différents les éléments ayant une distance forte entre eux [4]
+de mettre dans des clusters différents les éléments ayant une distance forte entre eux [4].
 
 **Distances de hamming :**
 
@@ -180,9 +188,9 @@ TODO
 
 # Remarques
 
-Lancer 2 fois l'algorithme avec les mêmes entrées ne fournira pas toujours les mêmes sorties
+Lancer 2 fois l'algorithme avec les mêmes entrées ne fournira pas toujours les mêmes sorties.
 
-Pour information, en Go, `varA := 2` déclare une variable varA (et détermine le type), `varA = 2` assigne une valeur à la variable existante `varA`
+Pour information, en Go, `varA := 2` déclare une variable varA (et détermine le type), `varA = 2` assigne une valeur à la variable existante `varA`.
 
 # Ouverture
 
