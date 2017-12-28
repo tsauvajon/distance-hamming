@@ -4,13 +4,20 @@ package main
 
 import "fmt"
 
-// Cluster est un alias pour [][]bool
-type Cluster [][]bool
+// Cluster est un alias pour []Exemple
+type Cluster []Exemple
 
 // Exemple est une ligne d'exemples
 type Exemple struct {
+	// Contient les valeurs, mises sous forme de booléen,
+	// de la ligne d'exemples
 	valeurs []bool
-	id      int
+	// On sauvegarde un "id" d'exemple, pour permettre de calculer
+	// 1 seule fois chaque distance de hamming.
+	// Quand on transfère un élément d'un cluster à un autre,
+	// son index dans le cluster va changer, et il faut donc
+	// un moyen de l'identifier
+	id int
 }
 
 // Demande à l'utilisateur de saisir le contenu d'un cluster
@@ -25,20 +32,28 @@ func saisieCluster(nbExemples, nbColonnes int) Cluster {
 
 	// Création des matrices : 2e dimension
 	for i := 0; i < nbExemples; i++ {
-		matrice[i] = make([]bool, nbColonnes)
+		matrice[i].valeurs = make([]bool, nbColonnes)
 	}
 
 	// Pour chaque valeur, renseigner la classe (1 ou 2)
 	fmt.Println("Remplissage de la matrice: [ligne d'example; colonne]")
 
 	for i := 0; i < nbExemples; i++ {
+		// on enregistre un "id" de la ligne d'exemple pour pouvoir
+		// la retrouver précisemment quand elle sera dans d'autres
+		// clusters
+		matrice[i].id = i
+
 		for j := 0; j < nbColonnes; j++ {
 			// +1 pour avoir avoir un format "humain" démarrant par 1 plutôt que 0
 			fmt.Printf("[%d; %d] : ", i+1, j+1)
 			fmt.Scan(&intValue)
 			fmt.Println()
 
-			matrice[i][j] = intValue == 1
+			// On enregistre la valeur saisie par l'utilisateur
+			// 1 = true
+			// toutes les autres valeurs = false
+			matrice[i].valeurs[j] = intValue == 1
 		}
 	}
 
@@ -56,7 +71,7 @@ func afficherCluster(cluster Cluster) {
 		return
 	}
 
-	nbColonnes := len(cluster[0])
+	nbColonnes := len(cluster[0].valeurs)
 
 	fmt.Print("   |  ")
 
@@ -71,7 +86,7 @@ func afficherCluster(cluster Cluster) {
 
 		for j := 0; j < nbColonnes; j++ {
 			var text = "F"
-			if cluster[i][j] {
+			if cluster[i].valeurs[j] {
 				text = "T"
 			}
 
@@ -111,23 +126,6 @@ func ontDeuxExemples(clusters []Cluster) bool {
 	}
 
 	return true
-}
-
-// Retourne la moyenne, pour chaque exemple, de ses distances internes
-func moyenneDistancesHamming(cluster Cluster) (distances []int) {
-	distances = make([]int, len(cluster))
-	// TODO
-	return distances
-}
-
-// Trouve l'élement d'un cluster qui a la distance de hamming
-// interne maximum (parmi tous les élements de ce cluster)
-// Retourne le tuple index, max
-func maxMoyDistanceHamming(cluster Cluster) (index, max int) {
-	index = 0
-	max = 0
-	// TODO
-	return index, max
 }
 
 func transfereElement(de, vers Cluster, index int) (Cluster, Cluster) {
