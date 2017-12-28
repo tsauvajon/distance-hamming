@@ -1,8 +1,13 @@
 // Ce fichier contient tout ce qui permet de créer,
-// modifier, afficher des clusters
+// modifier des clusters
 package main
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"math/rand"
+	"time"
+)
 
 // Cluster est un alias pour []Exemple
 type Cluster []Exemple
@@ -63,56 +68,27 @@ func saisieCluster(nbExemples, nbColonnes int) Cluster {
 	return matrice
 }
 
-// Affiche le contenu d'un cluster dans la console
-func afficherCluster(cluster Cluster) {
-	nbExemples := len(cluster)
-
-	if nbExemples == 0 {
-		return
-	}
-
-	nbColonnes := len(cluster[0].valeurs)
-
-	fmt.Print("   |  ")
-
-	for i := 0; i < nbColonnes; i++ {
-		fmt.Printf("%d  |  ", i+1)
-	}
-
-	fmt.Println()
-
-	for i := 0; i < nbExemples; i++ {
-		fmt.Printf("%d  |", i+1)
-
-		for j := 0; j < nbColonnes; j++ {
-			var text = "F"
-			if cluster[i].valeurs[j] {
-				text = "T"
-			}
-
-			fmt.Printf("  %s  |", text)
-		}
-
-		fmt.Println()
-	}
-
-	fmt.Println()
-	fmt.Println()
-}
-
 // Sépare aléatoirement une matrice d'exemples en n clusters
-func randomSplit(matrice Cluster, n int) []Cluster {
+func randomSplit(matrice Cluster, n int) ([]Cluster, error) {
+	// Si on ne peut pas mettre au moins 2 éléments dans chaque cluster
+	// => nique la police
+	if len(matrice)/2 < n {
+		return nil, errors.New("Impossible de séparer cette matrice : il faut au moins 2 éléments par cluster")
+	}
+
 	clusters := make([]Cluster, n)
 
-	// Initialisation des clusters vides
-	for i := range clusters {
-		clusters[i] = make(Cluster, 0)
-	}
-
 	for {
+		// Initialisation des clusters vides
+		for i := range clusters {
+			clusters[i] = make(Cluster, 0)
+		}
+
 		// On ajoute chaque exemple à un cluster aléatoire
+		seed := rand.NewSource(time.Now().UnixNano())
+		randomizer := rand.New(seed)
 		for _, exemple := range matrice {
-			rand := 0
+			rand := randomizer.Intn(n)
 			clusters[rand] = append(clusters[rand], exemple)
 		}
 
@@ -123,7 +99,7 @@ func randomSplit(matrice Cluster, n int) []Cluster {
 		}
 
 		// Sinon tout est ok renvoie les clusters obtenus
-		return clusters
+		return clusters, nil
 	}
 }
 
@@ -145,12 +121,21 @@ func transfereElement(de, vers Cluster, index int) (Cluster, Cluster) {
 
 // On remarquera le magnifique franglais
 func areConditionsSatisfaites(clusters []Cluster, distances DistancesHamming) bool {
-	// TODO
+	maxToutesDistancesInternes := 0
+	// minToutesDistancesExternes := math.MaxInt32
+
+	// Calcul de la plus grande de toutes les distances internes
 	for _, cluster := range clusters {
 		// calcul max distance interne
 		// compare avec chaque distance externe
 		// si une externe > interne return false
-		fmt.Println(cluster)
+		_, dist, _ := maxDistanceInterne(cluster, distances)
+
+		if dist > maxToutesDistancesInternes {
+			maxToutesDistancesInternes = dist
+		}
 	}
+
+	// Calcul de la plus petite de toutes les dinstances externes
 	return true
 }

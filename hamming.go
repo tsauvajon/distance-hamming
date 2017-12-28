@@ -1,4 +1,4 @@
-// Ce fichier contient tout ce qui permet de calculer et afficher des distances de hamming
+// Ce fichier contient tout ce qui permet de calculer et comparer des distances de hamming
 package main
 
 import "fmt"
@@ -41,38 +41,6 @@ func calculeDistancesHamming(cluster Cluster) (DistancesHamming, int) {
 	return distancesDeHamming, max
 }
 
-// Parcourt la matrice de distances de hamming et l'affiche
-// pour un rendu lisible
-func afficheDistancesHamming(distancesDeHamming DistancesHamming) {
-	fmt.Print("   |  ")
-
-	for i := range distancesDeHamming {
-		fmt.Printf("%d  |  ", i+1)
-	}
-
-	fmt.Println()
-
-	// Matrice nbExemples x nbExemples contenatn les distances de hamming
-	// Calcul et affichage de toutes les distances de Hamming
-	for i, row := range distancesDeHamming {
-		fmt.Printf("%d  |", i+1)
-
-		for j, dist := range row {
-			if i == j {
-				fmt.Print("  -  |")
-				continue
-			}
-
-			fmt.Printf("  %d  |", dist-1)
-		}
-
-		fmt.Println()
-	}
-
-	fmt.Println()
-	fmt.Println()
-}
-
 func distanceHamming(a, b Exemple, distancesDejaCalculees DistancesHamming) int {
 	// Si on a déjà calculé cette valeur, on la retourne
 	if distancesDejaCalculees[a.id][b.id] > 0 {
@@ -98,38 +66,123 @@ func distanceHamming(a, b Exemple, distancesDejaCalculees DistancesHamming) int 
 }
 
 // Retourne la moyenne des distances internes d'un exemple donné en paramètre
-func moyenneDistancesHamming(exemple Exemple) (distance int) {
-	distance = 0
-	// TODO
-	return distance
+func moyenneDistancesInternes(index int, cluster Cluster, distances DistancesHamming) (moyenne float32) {
+	total := 0
+
+	a := cluster[index]
+
+	for j, b := range cluster {
+		if index == j {
+			continue
+		}
+
+		total += distances[a.id][b.id]
+	}
+
+	moyenne = float32(total) / float32(len(cluster))
+
+	return moyenne
 }
 
 // Retourne la moyenne de toutes les distances internes d'un cluster
-func moyennesDistancesHamming(cluster Cluster) (distances []int, maxIndex int) {
-	distances = make([]int, len(cluster))
-	max := 0
+// Mais est-ce seulement utile ?
+func moyennesDistancesInternes(cluster Cluster, distances DistancesHamming) (moyennes []float32, maxIndex int) {
+	var max float32
 	maxIndex = 0
+	moyennes = make([]float32, len(cluster))
 
-	for i, exemple := range cluster {
-		distances[i] = moyenneDistancesHamming(exemple)
+	for i := range cluster {
+		moyennes[i] = moyenneDistancesInternes(i, cluster, distances)
 
-		if distances[i] > max {
+		if moyennes[i] > max {
 			maxIndex = i
+			max = moyennes[i]
 		}
 	}
 
-	return distances, maxIndex
+	return moyennes, maxIndex
 }
 
-// Trouve l'élement d'un cluster qui a la distance de hamming
-// interne maximum (parmi tous les élements de ce cluster)
-// Retourne le tuple index, max
-func maxDistanceHamming(cluster Cluster) (index, max int) {
-	index = 0
+// Pour éviter de faire 50 fois les mêmes calculs on sauvegarde dans une map
+type mdiResult struct {
+	calculated bool
+	index, max int
+	maxMoy     float32
+}
+
+var sauvegardeMaxDistancesInternes map[uint32]mdiResult
+
+// Trouve les éléments qui ont la + grande distance interne,
+// et parmi ceux là celui qui a la + grande moyenne de distances internes
+// TODO : méthode qui compare UN EXEMPLE avec UN CLUSTER (interne ou externe)
+func maxDistanceInterne(cluster Cluster, distances DistancesHamming) (index, max int, maxMoy float32) {
+	concat := fmt.Sprintf("%#v%#v", cluster, distances)
+	h := hash(concat)
+
+	// Si on a déjà calculé ce résultat on le renvoie direct
+	if save := sauvegardeMaxDistancesInternes[h]; save.calculated {
+		return save.index, save.max, save.maxMoy
+	}
+
+	// utilisation d'un map plutôt qu'un array pour pouvoir
+	// facilement vérifier si elle contient un élément
+	var indexes map[int]bool
 	max = 0
-	// TODO
-	// Si un seul élement a une distance interne max (par exemple 4
-	// dans l'énoncé) on le retourne
-	// Sinon on retourne l'élement avec la moyenne maximum
-	return index, max
+	maxMoy = 0
+
+	// On cherche la distance max, et tous les exemples qui "participent"
+	// à cette distance max
+	for i, exemple := range cluster {
+		for j := i + 1; j < len(cluster); j++ {
+			a := exemple.id
+			b := cluster[j].id
+
+			distance := distances[a][b]
+
+			switch {
+			case distance > max:
+				// on vide le tableau d'indexes
+				indexes = make(map[int]bool, 0)
+				max = distance
+
+				fallthrough
+			case distance == max:
+				// on ajoute les indexes des 2 distances
+				indexes[i] = true
+				indexes[j] = true
+			}
+		}
+	}
+
+	// On a tous nos index à inspecter.
+	// On récupère l'index qui a la distance interne moyenne max
+	// parmi ces index là
+	for i := range indexes {
+		moy := moyenneDistancesInternes(i, cluster, distances)
+
+		if moy > maxMoy {
+			maxMoy = moy
+			index = i
+		}
+	}
+
+	sauvegardeMaxDistancesInternes[h] = mdiResult{
+		calculated: true,
+		index:      index,
+		max:        max,
+		maxMoy:     maxMoy,
+	}
+
+	return index, max, maxMoy
+}
+
+// Converts int map keys to an int array
+func mapToArray(m map[int]interface{}) (out []int) {
+	out = make([]int, len(m))
+
+	for key := range m {
+		out = append(out, key)
+	}
+
+	return out
 }

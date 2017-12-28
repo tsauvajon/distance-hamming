@@ -200,6 +200,16 @@ N initial: 2
 
 ## En Go :
 
+**Syntaxe de Go**
+
+Pour information, en Go, `varA := 2` déclare une variable varA (et détermine
+le type), `varA = 2` assigne une valeur à la variable existante `varA`.
+
+En Go, les `switch` `break` par défaut. Il faut explicitement indiquer `fallthrough`
+pour exécuter l'instruction du `case` suivant.
+
+**Algo**
+
 TODO
 
 ## Complexité :
@@ -216,13 +226,16 @@ dans ce cas, l'algorithme retourne une solution qui réduit au maximum les
 distances internes, et qui souvent comprendra un nombre élevé de clusters
 (nombre de clusters maximum : nombre d'exemples / 2).
 
-Pour information, en Go, `varA := 2` déclare une variable varA (et détermine
-le type), `varA = 2` assigne une valeur à la variable existante `varA`.
+# Limitaions
 
-# Ouverture
+Le système de hashes stockés dans une map a ses limitations : il existe un risque
+de collision. Dans ce cas, l'algo sortira prématuremment. Sachant qu'un uint32 va
+de 0 à 4294967295, le risque de collisions avec 10 exemples reste assez limité.
 
 Cet algorithme ne fonctionnerait pas avec des valeurs non binaires (plus
 de 2 valeurs possibles pour un même critère, faible / moyen / fort par exemple).
+
+# Ouverture
 
 La complexité de cet algorithme pourrait largement être améliorée, et ne
 permet pas de traiter de problèmes avec une grosse masse de données.
@@ -237,3 +250,18 @@ les distances externes. L'approche inverse pourrait également fonctionner.
 L'algorithme cherche également à réduire les distances internes en se
 préoccupant peu du nombre de clusters ; selon le but recherché, il
 faudrait mettre + l'accent sur la diminution du nombre de clusters.
+
+Evolution possible : lancer un grand nombre de fois l'algorithme avec les
+mêmes entrées, comparer les résultats et garder la meilleure solution
+recontrée.
+
+# Collaboration
+
+J'ai discuté sur la phase "Crayon + papier" avec :
+
+- Guillaume BAECHLER
+- Loïc Thiaw-Wing-Kaï
+- Floriane Ziégelé
+
+J'ai échangé sur nos algorithmes respectifs avec Théophile Cousin, et 
+étudié son code sur https://github.com/theocousin/ai_hamming
