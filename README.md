@@ -25,7 +25,8 @@ Pour le changer :
 export GOPATH=/nouvelle/localisation/du/gopath
 ```
 
-Les projets Go se trouvent tous dans le même dossier, et sont organisés par organisation/username.
+Les projets Go se trouvent tous dans le même dossier, et sont organisés
+par organisation/username.
 
 Par exemple pour ce repo:
 `$HOME/go/src/github.com/tsauvajon/distance-hamming`.
@@ -38,7 +39,8 @@ go build
 
 # Utilisation
 
-Pour utiliser le jeu de test de l'énoncé, copier/coller le contenu de `Saisie.txt` dans la console.
+Pour utiliser le jeu de test de l'énoncé, copier/coller le contenu de
+`Saisie.txt` dans la console.
 
 Pour utiliser un autre jeu de test, suivre les consignes du programme !.
 
@@ -46,7 +48,9 @@ Pour utiliser un autre jeu de test, suivre les consignes du programme !.
 
 ## Papier + crayon
 
-J'ai commencé par une approche papier avec l'exemple donné (10 exemples, 4 colonnes) :
+J'ai commencé par une approche papier avec l'exemple donné (10 exemples,
+4 colonnes) :
+
 Tout d'abord, transformation des exemples en true/false, par exemple
 clair = true et foncée = false pour rendre l'algorithme plus facile à concevoir.
 
@@ -83,9 +87,11 @@ distance de hamming entre chaque paire d'éléments :
 |9  |  4  |  3  |  3  |  3  |  3  |  1  |  2  |  1  |  -  |  1  |
 |10 |  3  |  4  |  2  |  2  |  2  |  2  |  1  |  2  |  1  |  -  |
 
-Pour calculer les valeurs, j'ai calculé les différences manuellement entre 2 lignes d'exemples.
+Pour calculer les valeurs, j'ai calculé les différences manuellement entre
+2 lignes d'exemples.
 
-Par exemple, la ligne d'exemple 1 et la ligne d'exemple 6 ont une valeur commune et trois valeurs difféntes.
+Par exemple, la ligne d'exemple 1 et la ligne d'exemple 6 ont une valeur
+commune et trois valeurs difféntes.
 
 J'inscris donc 3 comme valeur pour [1, 6] et [6, 1].
 
@@ -94,8 +100,9 @@ Je répète ces étapes jusqu'à ce que ma matrice soit complète.
 ## Clustering
 
 J'ai ensuite séparé ces données en 2 clusters :
-pour celà, j'ai essayé de regrouper au maximum les éléments ayant une distance faible entre eux (1), et
-de mettre dans des clusters différents les éléments ayant une distance forte entre eux [4].
+pour celà, j'ai essayé de regrouper au maximum les éléments ayant une distance
+faible entre eux (1), et de mettre dans des clusters différents les éléments
+ayant une distance forte entre eux [4].
 
 **Distances de hamming :**
 
@@ -168,8 +175,8 @@ Il est impossible d'obtenir une solution satisfaisante avec seulement 2 clusters
 et l'élément 7 donne des solutions assez similaires et mitigées s'il est placé
 soit dans le cluster 1, soit dans le cluster 2.
 
-Une solution pourrait être atteinte avec plus de clusters, mais il serait très long
-et difficile de les obtenir manuellement. Un algorithme s'impose donc.
+Une solution pourrait être atteinte avec plus de clusters, mais il serait très
+long et difficile de les obtenir manuellement. Un algorithme s'impose donc.
 
 # Algorithme
 
@@ -201,10 +208,32 @@ TODO
 
 # Remarques
 
-Lancer 2 fois l'algorithme avec les mêmes entrées ne fournira pas toujours les mêmes sorties.
+Lancer 2 fois l'algorithme avec les mêmes entrées ne fournira pas toujours
+les mêmes sorties.
 
-Pour information, en Go, `varA := 2` déclare une variable varA (et détermine le type), `varA = 2` assigne une valeur à la variable existante `varA`.
+Selon les entrées, il n'est pas certain qu'il existe de solution viable :
+dans ce cas, l'algorithme retourne une solution qui réduit au maximum les
+distances internes, et qui souvent comprendra un nombre élevé de clusters
+(nombre de clusters maximum : nombre d'exemples / 2).
+
+Pour information, en Go, `varA := 2` déclare une variable varA (et détermine
+le type), `varA = 2` assigne une valeur à la variable existante `varA`.
 
 # Ouverture
 
-Cet algorithme ne fonctionnerait pas avec des valeurs non binaires (plus de 2 valeurs possibles pour un même critère, faible / moyen / fort par exemple).
+Cet algorithme ne fonctionnerait pas avec des valeurs non binaires (plus
+de 2 valeurs possibles pour un même critère, faible / moyen / fort par exemple).
+
+La complexité de cet algorithme pourrait largement être améliorée, et ne
+permet pas de traiter de problèmes avec une grosse masse de données.
+
+A la suite du codage de cet algorithme, le langage Go semble bien adapté
+à ce type de problèmes, au même titre que le Python, en comparaison à des
+langages orientés Objet (Java, C#).
+
+L'algorithme cherche à réduire les distances internes, mais pas à maximiser
+les distances externes. L'approche inverse pourrait également fonctionner.
+
+L'algorithme cherche également à réduire les distances internes en se
+préoccupant peu du nombre de clusters ; selon le but recherché, il
+faudrait mettre + l'accent sur la diminution du nombre de clusters.
