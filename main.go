@@ -5,9 +5,10 @@ import (
 )
 
 var (
-	nbExemples, nbColonnes, intValue int
-	matrice                          [][]bool
-	distancesHamming                 [][]int
+	nbExemples, nbColonnes, nbClusters int // paramètres de l'application
+	intValue                           int // saisie d'entier dans la console
+	matrice                            [][]bool
+	distancesHamming                   [][]int
 )
 
 func main() {
@@ -18,6 +19,9 @@ func main() {
 	fmt.Scanln(&nbColonnes)
 
 	fmt.Printf("Matrice de %d x %d\n\n", nbExemples, nbColonnes)
+
+	fmt.Println("Nombre de clusters à créer : ")
+	fmt.Scanln(&nbClusters)
 
 	// Création des matrices : première dimension
 	matrice = make([][]bool, nbExemples)
@@ -76,6 +80,45 @@ func main() {
 
 	fmt.Println("Distances de hamming :")
 
+	distancesDeHamming, _ := calculeDistancesHamming(matrice)
+	afficheDistancesHamming(distancesDeHamming)
+}
+
+// Calcul de toutes les distances de hamming pour un cluster
+// Retourne un tableau de distances de hamming, et la distance max
+// a l'intérieur de ce cluster
+func calculeDistancesHamming(cluster [][]bool) ([][]int, int) {
+	// On crée un tableau de la taille du cluster x la taille du cluster
+	distancesDeHamming := make([][]int, len(cluster))
+
+	max := 0
+
+	// On fait un tour complet d'initialisation,
+	// sinon distancesDeHamming[j][i] ne sera
+	// par toujours initialisé à temps
+	for i := 0; i < len(cluster); i++ {
+		distancesDeHamming[i] = make([]int, len(cluster))
+	}
+
+	for i := 0; i < len(cluster); i++ {
+		for j := i + 1; j < len(cluster); j++ {
+			distance := distanceHamming(i, j, distancesDeHamming, cluster) - 1
+
+			if distance > max {
+				max = distance
+			}
+
+			distancesDeHamming[i][j] = distance + 1
+			distancesDeHamming[j][i] = distance + 1
+		}
+	}
+
+	return distancesDeHamming, max
+}
+
+// Parcourt la matrice de distances de hamming et l'affiche
+// pour un rendu lisible
+func afficheDistancesHamming(distancesDeHamming [][]int) {
 	fmt.Print("   |  ")
 
 	for i := 0; i < nbExemples; i++ {
@@ -86,18 +129,16 @@ func main() {
 
 	// Matrice nbExemples x nbExemples contenatn les distances de hamming
 	// Calcul et affichage de toutes les distances de Hamming
-	for i := 0; i < nbExemples; i++ {
+	for i, row := range distancesDeHamming {
 		fmt.Printf("%d  |", i+1)
 
-		for j := 0; j < nbExemples; j++ {
+		for j, dist := range row {
 			if i == j {
 				fmt.Print("  -  |")
 				continue
 			}
 
-			distance := distanceHamming(i, j)
-
-			fmt.Printf("  %d  |", distance)
+			fmt.Printf("  %d  |", dist-1)
 		}
 
 		fmt.Println()
@@ -107,26 +148,24 @@ func main() {
 	fmt.Println()
 }
 
-func distanceHamming(a, b int) int {
+func distanceHamming(a, b int, distancesDejaCalculees [][]int, cluster [][]bool) int {
 	// Si on a déjà calculé cette valeur, on la retourne
-	if distancesHamming[a][b] > 0 {
+	if distancesDejaCalculees[a][b] > 0 {
 		// -1 car on ne veut pas stocker 0, étant la valeur par défaut.
+		// Ca fausserait les comparaisons.
 		// On ajoute donc +1 au moment de stocker la valeur et on la soustrait en la récupérant
-		return distancesHamming[a][b] - 1
+		// TODO : utiliser un type nullable, ou une structure
+		return distancesDejaCalculees[a][b]
 	}
 
 	// Si la valeur n'a pas encore été calculée, on la calcule
 	count := 0
 
-	for i, a := range matrice[a] {
-		if a != matrice[b][i] {
+	for i, a := range cluster[a] {
+		if a != cluster[b][i] {
 			count++
 		}
 	}
 
-	// On stocke la valeur calculée pour éviter de la calculer 2 fois
-	distancesHamming[a][b] = count + 1
-	distancesHamming[b][a] = count + 1
-
-	return count
+	return count + 1
 }
