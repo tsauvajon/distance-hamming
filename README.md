@@ -151,6 +151,13 @@ J'obtiens donc les 2 clusters suivants :
 
 **Distances de hamming**
 
+|   |  1  |  2  |  3  |  4  |
+|---|-----|-----|-----|-----|
+|1  |  -  |  2  |  1  |  2  |
+|2  |  2  |  -  |  1  |  2  |
+|3  |  1  |  1  |  -  |  1  |
+|4  |  2  |  2  |  1  |  -  |
+
 ## Conclusions
 
 On constate qu'avec ces 2 clusters, la solution n'est pas satisfaisante :
