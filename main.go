@@ -38,4 +38,9 @@ func main() {
 	distancesDeHamming, _ := calculeDistancesHamming(matrice)
 
 	afficheDistancesHamming(distancesDeHamming)
+
+	// ## Début de l'algorithme
+
+	// On sépare la matrice en 2 clusters aléatoires
+	// clusters := randomSplit(matrice, 2)
 }

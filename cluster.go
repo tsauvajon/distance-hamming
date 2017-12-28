@@ -104,16 +104,26 @@ func afficherCluster(cluster Cluster) {
 func randomSplit(matrice Cluster, n int) []Cluster {
 	clusters := make([]Cluster, n)
 
+	// Initialisation des clusters vides
+	for i := range clusters {
+		clusters[i] = make(Cluster, 0)
+	}
+
 	for {
-		for i := 0; i < len(matrice); i++ {
-
+		// On ajoute chaque exemple à un cluster aléatoire
+		for _, exemple := range matrice {
+			rand := 0
+			clusters[rand] = append(clusters[rand], exemple)
 		}
 
-		// Si on a un split acceptable (au moins 2 exemples par cluster)
-		// on renvoie les clusters obtenus
-		if ontDeuxExemples(clusters) {
-			return clusters
+		// Si on a pas un split acceptable (au moins 2 exemples par cluster)
+		// on réitère
+		if !ontDeuxExemples(clusters) {
+			continue
 		}
+
+		// Sinon tout est ok renvoie les clusters obtenus
+		return clusters
 	}
 }
 
@@ -131,4 +141,16 @@ func ontDeuxExemples(clusters []Cluster) bool {
 func transfereElement(de, vers Cluster, index int) (Cluster, Cluster) {
 	// TODO
 	return de, vers
+}
+
+// On remarquera le magnifique franglais
+func areConditionsSatisfaites(clusters []Cluster, distances DistancesHamming) bool {
+	// TODO
+	for _, cluster := range clusters {
+		// calcul max distance interne
+		// compare avec chaque distance externe
+		// si une externe > interne return false
+		fmt.Println(cluster)
+	}
+	return true
 }
