@@ -8,6 +8,7 @@ func main() {
 	var (
 		nbExemples    int // Nombre de lignes d'exemple
 		nbColonnes    int // Nombre de colonnes pour chaque ligne d'exemples
+		nbClustersMin int // Nombre de clusters minimum à obtenir
 		nbClustersMax int // Nombre de clusters maximum à obtenir
 	)
 
@@ -19,10 +20,13 @@ func main() {
 	fmt.Println("Nombre de colonnes : ")
 	fmt.Scanln(&nbColonnes)
 
+	fmt.Println("Nombre de clusters min à créer : ")
+	fmt.Scanln(&nbClustersMin)
+
 	fmt.Println("Nombre de clusters max à créer : ")
 	fmt.Scanln(&nbClustersMax)
 
-	fmt.Printf("Matrice de %d x %d, à séparer en %d clusters max.\n\n", nbExemples, nbColonnes, nbClustersMax)
+	fmt.Printf("Matrice de %d x %d, à séparer entre %d et  %d clusters.\n\n", nbExemples, nbColonnes, nbClustersMin, nbClustersMax)
 
 	// On demande à l'utilisateur de remplir la matrice initiale (les exemples)
 	matrice := saisieCluster(nbExemples, nbColonnes)
@@ -41,9 +45,13 @@ func main() {
 
 	// ## Début de l'algorithme
 
-	var solutionRetenue []Cluster
+	saveCompare = make(map[Hash]compareResult)
 
-	nbClusters := 2
+	solutionRetenue := make([]Cluster, 1)
+
+	solutionRetenue[0] = matrice
+
+	nbClusters := nbClustersMin
 
 	for nbClusters <= nbClustersMax {
 		// On sépare la matrice en 2 clusters aléatoires
@@ -51,39 +59,19 @@ func main() {
 
 		// Si une erreur est retournée c'est qu'on ne peut pas
 		// split en N clusters (pas assez d'éléments).
-		// Dans ce cas soit on a déjà une solution et on l'affiche,
-		// soit on n'a pas de solution, la seule solution possible
-		// est donc la matrice de départ.
+		// On termine donc l'algo
 		if err != nil {
-			if solutionRetenue == nil {
-				fmt.Printf("Impossible de séparer en %d clusters : pas assez d'éléments.\n", nbClusters)
-				fmt.Println("1 seul cluster = celui de départ :")
-				fmt.Println()
-
-				afficheCluster(matrice)
-
-				return
-			}
-
-			fmt.Println("Impossible de trouver un solution satisfaisante.")
-			fmt.Printf("Arrêté car on ne peut pas avoir plus de %d clusters avec cette matrice\n", nbClusters)
-			fmt.Println("Meilleure solution trouvée :")
-			fmt.Println()
-
-			afficheClusters(solutionRetenue)
-
-			return
+			break
 		}
 
 		// La hashMap va contenir les hashes des clusters.
-		// Cela permet de vérifier, avec une complexité très faible,
+		// Cela permet de vérifier, avec une complexité plus
+		// faible que de faire un for dans un for dans un for,
 		// si cette disposition de clusters a déjà été parcourue
-		hashMap := make(map[uint32]bool)
+		hashMap := make(map[Hash]bool)
 
 		for {
 			h := hash(clusters)
-
-			fmt.Println("hash : ", h)
 
 			if hashMap[h] {
 				fmt.Println("Cette disposition de clusters a déjà été parcourue.")
@@ -109,15 +97,55 @@ func main() {
 				return
 			}
 
-			// 1) Transférer un élement d'un cluster à un autre
-			// 2) S'il n'y a plus qu'un élément dans le cluster,
-			// transférer un élement dans ce cluster
-			// repeat 2)
+			// A améliorer
+			hashMap2 := make(map[Hash]bool)
+			exit := false
+
+			for {
+				clusterIndex, elemIndex := trouverElementADeplacer(clusters, distancesDeHamming)
+
+				elemADeplacer := clusters[clusterIndex][elemIndex]
+
+				versIndex := trouverVersOuDeplacer(elemADeplacer, clusterIndex, clusters, distancesDeHamming)
+
+				fmt.Printf("Déplacer l'exemple clusters[%d][%d] (id: %d) vers le cluster clusters[%d]\n", clusterIndex, elemIndex, elemADeplacer.id, versIndex)
+
+				clusters = transfereElement(clusterIndex, elemIndex, versIndex, clusters)
+
+				// ## ANTI BOUCLE INFINIE DEGUEULASSE
+				h := hash(clusters)
+
+				if hashMap2[h] {
+					fmt.Println("Cette disposition de clusters a déjà été parcourue.")
+					nbClusters++
+					fmt.Println("Augmentation du nombre de clusters: ", nbClusters)
+					fmt.Println()
+
+					solutionRetenue = clusters
+
+					exit = true
+
+					break
+				}
+
+				// On enregistre la disposition actuelle
+				hashMap2[h] = true
+				// ## FIN ANTI BOUCLE INFINIE DEGUEULASSE
+
+				// Continue jusqu'à ce que tous les clusters aient au moins
+				// 2 exemples
+				if ontTousDeuxExemples(clusters) {
+					break
+				}
+			}
+
+			if exit {
+				break
+			}
 		}
 	}
 
 	fmt.Println("Impossible de trouver une solution satisfaisante.")
-	fmt.Println("Arrêté car le nombre max de clusters a été atteint")
 	fmt.Println("Meilleure solution trouvée :")
 	fmt.Println()
 

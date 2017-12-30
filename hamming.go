@@ -2,6 +2,7 @@
 package main
 
 import "fmt"
+import "math"
 
 // DistancesHamming est un alias pour [][]int
 type DistancesHamming [][]int
@@ -65,124 +66,195 @@ func distanceHamming(a, b Exemple, distancesDejaCalculees DistancesHamming) int 
 	return count + 1
 }
 
-// Retourne la moyenne des distances internes d'un exemple donné en paramètre
-func moyenneDistancesInternes(index int, cluster Cluster, distances DistancesHamming) (moyenne float32) {
+// On sauvegarde les résultats pour éviter de calculer 2 fois la même chose
+type compareResult struct {
+	calculated         bool
+	min, max           int
+	minIndex, maxIndex int
+	moy                float32
+}
+
+var saveCompare map[Hash]compareResult
+
+// Compare un exemple avec un cluster (interne ou externe)
+// et retourne min (distance minimum entre cet exemple et les éléments du cluster),
+// max (pareil, maximum) et moy (distance moyenne entre cet élément
+// et le cluster cible)
+func compareAvecCluster(exemple Exemple, cluster Cluster, distances DistancesHamming) (min, max, minIndex, maxIndex int, moy float32) {
+	concat := fmt.Sprintf("cp%#v%#v%#v", exemple, cluster, distances)
+	h := hash(concat)
+	res := saveCompare[h]
+
+	if res.calculated {
+		return res.min, res.max, res.minIndex, res.maxIndex, res.moy
+	}
+
 	total := 0
+	count := 0
+	min = math.MaxInt32
+	max = 0
 
-	a := cluster[index]
-
-	for j, b := range cluster {
-		if index == j {
+	for i, ex := range cluster {
+		if ex.id == exemple.id {
 			continue
 		}
 
-		total += distances[a.id][b.id]
-	}
+		count++
+		distance := distances[ex.id][exemple.id]
+		total += distance
 
-	moyenne = float32(total) / float32(len(cluster))
-
-	return moyenne
-}
-
-// Retourne la moyenne de toutes les distances internes d'un cluster
-// Mais est-ce seulement utile ?
-func moyennesDistancesInternes(cluster Cluster, distances DistancesHamming) (moyennes []float32, maxIndex int) {
-	var max float32
-	maxIndex = 0
-	moyennes = make([]float32, len(cluster))
-
-	for i := range cluster {
-		moyennes[i] = moyenneDistancesInternes(i, cluster, distances)
-
-		if moyennes[i] > max {
+		if distance > max {
+			max = distance
 			maxIndex = i
-			max = moyennes[i]
+		}
+
+		if distance < min {
+			min = distance
+			minIndex = i
 		}
 	}
 
-	return moyennes, maxIndex
-}
+	moy = float32(total) / float32(count)
 
-// Pour éviter de faire 50 fois les mêmes calculs on sauvegarde dans une map
-type mdiResult struct {
-	calculated bool
-	index, max int
-	maxMoy     float32
-}
-
-var sauvegardeMaxDistancesInternes map[uint32]mdiResult
-
-// Trouve les éléments qui ont la + grande distance interne,
-// et parmi ceux là celui qui a la + grande moyenne de distances internes
-// TODO : méthode qui compare UN EXEMPLE avec UN CLUSTER (interne ou externe)
-func maxDistanceInterne(cluster Cluster, distances DistancesHamming) (index, max int, maxMoy float32) {
-	concat := fmt.Sprintf("%#v%#v", cluster, distances)
-	h := hash(concat)
-
-	// Si on a déjà calculé ce résultat on le renvoie direct
-	if save := sauvegardeMaxDistancesInternes[h]; save.calculated {
-		return save.index, save.max, save.maxMoy
+	saveCompare[h] = compareResult{
+		calculated: true,
+		min:        min,
+		max:        max,
+		minIndex:   minIndex,
+		maxIndex:   maxIndex,
+		moy:        moy,
 	}
 
-	// utilisation d'un map plutôt qu'un array pour pouvoir
-	// facilement vérifier si elle contient un élément
-	var indexes map[int]bool
-	max = 0
-	maxMoy = 0
+	return min, max, minIndex, maxIndex, moy
+}
 
-	// On cherche la distance max, et tous les exemples qui "participent"
-	// à cette distance max
-	for i, exemple := range cluster {
-		for j := i + 1; j < len(cluster); j++ {
-			a := exemple.id
-			b := cluster[j].id
+// Récupère la distance interne mini, maxi et la moyenne des distances internes d'un cluster
+func distancesInternes(cluster Cluster, distances DistancesHamming) (min, max, minIndex, maxIndex int, moy float32) {
+	concat := fmt.Sprintf("di%#v%#v", cluster, distances)
+	h := hash(concat)
+	res := saveCompare[h]
 
-			distance := distances[a][b]
+	if res.calculated {
+		return res.min, res.max, res.minIndex, res.maxIndex, res.moy
+	}
 
-			switch {
-			case distance > max:
-				// on vide le tableau d'indexes
-				indexes = make(map[int]bool, 0)
-				max = distance
+	total := float32(0)
+	min = math.MaxInt32
+	minMoy := float32(0)
+	maxMoy := float32(0)
 
-				fallthrough
-			case distance == max:
-				// on ajoute les indexes des 2 distances
-				indexes[i] = true
-				indexes[j] = true
+	for _, exemple := range cluster {
+		mi, ma, minI, maxI, mo := compareAvecCluster(exemple, cluster, distances)
+
+		total += mo
+
+		// on sauvegarde le mini avec la distance moyenne mini
+		if mi < min || (mi == min && minMoy < mo) {
+			min = mi
+			minIndex = minI
+			minMoy = mo
+		}
+
+		// et le maxi avec la distance moyenne maxi
+		if ma > max || (ma == max && maxMoy > mo) {
+			max = ma
+			maxIndex = maxI
+			maxMoy = mo
+		}
+	}
+
+	moy = total / float32(len(cluster))
+
+	saveCompare[h] = compareResult{
+		calculated: true,
+		min:        min,
+		max:        max,
+		minIndex:   minIndex,
+		maxIndex:   maxIndex,
+		moy:        moy,
+	}
+
+	return min, max, minIndex, maxIndex, moy
+}
+
+func maxDistancesInternes(clusters []Cluster, distances DistancesHamming) (max int, maxIndex int) {
+	maxMoy := float32(0)
+	for i, cluster := range clusters {
+		if _, m, _, _, mo := distancesInternes(cluster, distances); m > max || (m == max && mo > maxMoy) {
+			max = m
+			maxIndex = i
+			maxMoy = mo
+		}
+	}
+
+	return max, maxIndex
+}
+
+func distancesExternes(cluster Cluster, clusters []Cluster, distances DistancesHamming) (min, max, minIndex, maxIndex int, moy float32) {
+	concat := fmt.Sprintf("de%#v%#v%#v", cluster, clusters, distances)
+	h := hash(concat)
+	res := saveCompare[h]
+
+	if res.calculated {
+		return res.min, res.max, res.minIndex, res.maxIndex, res.moy
+	}
+
+	min = math.MaxInt32
+	total := float32(0)
+	count := 0
+	minMoy := float32(0)
+	maxMoy := float32(0)
+
+	for _, exemple := range cluster {
+		for i, cls := range clusters {
+			// Si c'est le même cluster
+			if exemple.id == cls[0].id {
+				continue
+			}
+
+			mi, ma, _, _, mo := compareAvecCluster(exemple, cls, distances)
+
+			total += mo
+
+			count++
+
+			// on sauvegarde le mini avec la distance moyenne mini
+			if mi < min || (mi == min && minMoy < mo) {
+				min = mi
+				minIndex = i
+				minMoy = mo
+			}
+
+			// et le maxi avec la distance moyenne maxi
+			if ma > max || (ma == max && maxMoy > mo) {
+				max = ma
+				maxIndex = i
+				maxMoy = mo
 			}
 		}
 	}
 
-	// On a tous nos index à inspecter.
-	// On récupère l'index qui a la distance interne moyenne max
-	// parmi ces index là
-	for i := range indexes {
-		moy := moyenneDistancesInternes(i, cluster, distances)
+	moy = total / float32(count)
 
-		if moy > maxMoy {
-			maxMoy = moy
-			index = i
+	saveCompare[h] = compareResult{
+		calculated: true,
+		min:        min,
+		max:        max,
+		minIndex:   minIndex,
+		maxIndex:   maxIndex,
+		moy:        moy,
+	}
+
+	return min, max, minIndex, maxIndex, moy
+}
+
+func minDistancesExternes(clusters []Cluster, distances DistancesHamming) (min, minIndex int) {
+	for _, cluster := range clusters {
+		if m, _, minI, _, _ := distancesExternes(cluster, clusters, distances); m > min {
+			min = m
+			minIndex = minI
 		}
 	}
 
-	sauvegardeMaxDistancesInternes[h] = mdiResult{
-		calculated: true,
-		index:      index,
-		max:        max,
-		maxMoy:     maxMoy,
-	}
-
-	return index, max, maxMoy
-}
-
-// Converts int map keys to an int array
-func mapToArray(m map[int]interface{}) (out []int) {
-	out = make([]int, len(m))
-
-	for key := range m {
-		out = append(out, key)
-	}
-
-	return out
+	return min, minIndex
 }

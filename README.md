@@ -182,7 +182,7 @@ long et difficile de les obtenir manuellement. Un algorithme s'impose donc.
 
 ## En langage naturel :
 
-N initial: 2
+N initial = 2
 
 - 1 On démarre en splittant aléatoirement les exemples en N clusters (au moins 2 éléments par cluster) => si impossible, on retourne les derniers clusters obtenus
 - 2 On vérifie si les conditions sont remplies => Oui = fini
@@ -210,13 +210,55 @@ pour exécuter l'instruction du `case` suivant.
 
 **Algo**
 
-TODO
+J'ai + misé sur la lisibilité du code, afin de pouvoir facilement revenir
+sur mon code, le comprendre et l'amélioré, qu'obtenir un nombre de lignes
+de code minimal.
+
+Le code est séparé en fichiers "thématiques" en vue d'apporter de la lisibilité :
+l'algorithme se trouve dans `main.go`, tout ce qui permet de calculer des distances
+de hamming dans `hamming.go`, ce qui permet de gérer les clusters dans `cluster.go`
+et enfin les fonctions de hashage dans `hash.go`.
+
+L'algorithme crée N clusters aléatoires. Il transfère ensuite des éléments
+d'un cluster à un autre, jusqu'à soit 1/ obtenir une solution satisfaisante,
+soit 2/ retomber sur une configuration de cluster déjà obtenue précédemment.
+
+Le choix de l'élément à transférer se fait ainsi :
+- Dans chaque cluster, on cherche l'élément qui a la distance interne maximum
+et la moyenne de distances internes maximum
+- On a donc 1 élément par cluster : on compare leur distance interne max
+- S'il y a une égalité, on prend l'élément dont le cluster a la distance
+interne moyenne maximum
+
+L'élément choisi est transféré dans le cluster avec lequel il a une distance
+moyenne minimum.
 
 ## Complexité :
 
 TODO
 
-# Remarques
+# Organisation
+
+## Collaboration
+
+J'ai discuté sur la phase "Crayon + papier" avec :
+
+- Guillaume BAECHLER
+- Loïc Thiaw-Wing-Kaï
+- Floriane Ziégelé
+
+J'ai échangé sur nos algorithmes respectifs avec Théophile Cousin, et 
+étudié son code sur https://github.com/theocousin/ai_hamming
+
+## Temps passé (approximatif)
+
+Algo sur papier : 1h30
+Code : 3h
+Rapport : 1h30
+
+# Conclusion
+
+## Remarques
 
 Lancer 2 fois l'algorithme avec les mêmes entrées ne fournira pas toujours
 les mêmes sorties.
@@ -226,16 +268,18 @@ dans ce cas, l'algorithme retourne une solution qui réduit au maximum les
 distances internes, et qui souvent comprendra un nombre élevé de clusters
 (nombre de clusters maximum : nombre d'exemples / 2).
 
-# Limitaions
+## Limitations
 
 Le système de hashes stockés dans une map a ses limitations : il existe un risque
-de collision. Dans ce cas, l'algo sortira prématuremment. Sachant qu'un uint32 va
+de collision. Dans ce cas, l'algo sortira prématurément. Sachant qu'un uint32 va
 de 0 à 4294967295, le risque de collisions avec 10 exemples reste assez limité.
 
 Cet algorithme ne fonctionnerait pas avec des valeurs non binaires (plus
 de 2 valeurs possibles pour un même critère, faible / moyen / fort par exemple).
 
-# Ouverture
+L'algorithme est un peu une "usine à gaz", il pourrait sans doute être condensé !
+
+## Ouverture
 
 La complexité de cet algorithme pourrait largement être améliorée, et ne
 permet pas de traiter de problèmes avec une grosse masse de données.
@@ -251,17 +295,12 @@ L'algorithme cherche également à réduire les distances internes en se
 préoccupant peu du nombre de clusters ; selon le but recherché, il
 faudrait mettre + l'accent sur la diminution du nombre de clusters.
 
-Evolution possible : lancer un grand nombre de fois l'algorithme avec les
+*Evolution possible* : lancer un grand nombre de fois l'algorithme avec les
 mêmes entrées, comparer les résultats et garder la meilleure solution
 recontrée.
 
-# Collaboration
+*Amélioration possible* : changer la génération de clusters aléatoires de
+façon plus proactive en étant sûr de placer au moins 2 exemples par cluster.
 
-J'ai discuté sur la phase "Crayon + papier" avec :
-
-- Guillaume BAECHLER
-- Loïc Thiaw-Wing-Kaï
-- Floriane Ziégelé
-
-J'ai échangé sur nos algorithmes respectifs avec Théophile Cousin, et 
-étudié son code sur https://github.com/theocousin/ai_hamming
+*Amélioration possible* : pour éviter les for dans des for dans des for,
+travailler directement sur les distances plutôt que sur les paires d'exemples.

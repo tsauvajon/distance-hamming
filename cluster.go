@@ -5,6 +5,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"math"
 	"math/rand"
 	"time"
 )
@@ -94,7 +95,7 @@ func randomSplit(matrice Cluster, n int) ([]Cluster, error) {
 
 		// Si on a pas un split acceptable (au moins 2 exemples par cluster)
 		// on réitère
-		if !ontDeuxExemples(clusters) {
+		if !ontTousDeuxExemples(clusters) {
 			continue
 		}
 
@@ -104,7 +105,7 @@ func randomSplit(matrice Cluster, n int) ([]Cluster, error) {
 }
 
 // Retourne true si les clusters ont tous au moins 2 exemples
-func ontDeuxExemples(clusters []Cluster) bool {
+func ontTousDeuxExemples(clusters []Cluster) bool {
 	for _, cluster := range clusters {
 		if len(cluster) < 2 {
 			return false
@@ -114,28 +115,69 @@ func ontDeuxExemples(clusters []Cluster) bool {
 	return true
 }
 
-func transfereElement(de, vers Cluster, index int) (Cluster, Cluster) {
-	// TODO
-	return de, vers
+// Transfère un exemple d'un cluster à un autre
+// fromIndex : index du cluster de départ
+// exempleIndex : index de l'exemple dans le cluster de départ
+// toIndex : index du cluster d'arrivée
+func transfereElement(fromIndex, exempleIndex, toIndex int, clusters []Cluster) []Cluster {
+	c := clusters[fromIndex]
+
+	// tampon
+	exemple := c[exempleIndex]
+
+	// on retire l'élement en question
+	clusters[fromIndex] = append(c[:exempleIndex], c[exempleIndex+1:]...)
+
+	// et on le rajoute à l'autre cluster
+	clusters[toIndex] = append(clusters[toIndex], exemple)
+
+	return clusters
 }
 
 // On remarquera le magnifique franglais
 func areConditionsSatisfaites(clusters []Cluster, distances DistancesHamming) bool {
-	maxToutesDistancesInternes := 0
-	// minToutesDistancesExternes := math.MaxInt32
 
-	// Calcul de la plus grande de toutes les distances internes
-	for _, cluster := range clusters {
-		// calcul max distance interne
-		// compare avec chaque distance externe
-		// si une externe > interne return false
-		_, dist, _ := maxDistanceInterne(cluster, distances)
+	minExt, _ := minDistancesExternes(clusters, distances)
+	maxInt, _ := maxDistancesInternes(clusters, distances)
 
-		if dist > maxToutesDistancesInternes {
-			maxToutesDistancesInternes = dist
+	// Les conditions sont satisfaites si toutes les distances internes sont
+	// inférieurs ou égales à toutes distances externes
+	return maxInt <= minExt
+}
+
+// Choix de l'élément à jarter :
+// - cluster avec la distance interne maximum
+// -> élément avec la distance interne max et la moyenne max
+// Choix du cluster dans lequel mettre cet élément :
+// - cluster avec la distance minimum avec cet élément
+func trouverElementADeplacer(clusters []Cluster, distances DistancesHamming) (clusterIndex, elemIndex int) {
+	_, clusterIndex = maxDistancesInternes(clusters, distances)
+	_, _, _, elemIndex, _ = distancesInternes(clusters[clusterIndex], distances)
+
+	return clusterIndex, elemIndex
+}
+
+// Trouver dans quel cluster (index) on va déplacer l'élément.
+// pasDans : index du cluster dans lequel ne pas déplacer cet élement
+// (correspon à l'index du cluster dans lequel il se trouve)
+func trouverVersOuDeplacer(exemple Exemple, pasDans int, clusters []Cluster, distances DistancesHamming) int {
+	min := math.MaxInt32
+	minMoy := float32(0)
+	minIndex := 0
+
+	for i, cluster := range clusters {
+		if i == pasDans {
+			continue
+		}
+
+		mi, _, _, _, mo := compareAvecCluster(exemple, cluster, distances)
+
+		if mi < min || (mi == min && mo < minMoy) {
+			minMoy = mo
+			min = mi
+			minIndex = i
 		}
 	}
 
-	// Calcul de la plus petite de toutes les dinstances externes
-	return true
+	return minIndex
 }
