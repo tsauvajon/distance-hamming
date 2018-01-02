@@ -74,6 +74,8 @@ distance de hamming entre chaque paire d'éléments :
 
 **Distances de hamming :**
 
+*Répond à la question a)*
+
 |   |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  |  10 |
 |---|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|
 |1  |  -  |  1  |  1  |  1  |  1  |  3  |  2  |  3  |  4  |  3  |
@@ -98,6 +100,8 @@ J'inscris donc 3 comme valeur pour [1, 6] et [6, 1].
 Je répète ces étapes jusqu'à ce que ma matrice soit complète.
 
 ## Clustering
+
+*Répond à la question b)*
 
 J'ai ensuite séparé ces données en 2 clusters :
 pour celà, j'ai essayé de regrouper au maximum les éléments ayant une distance
@@ -182,6 +186,8 @@ long et difficile de les obtenir manuellement. Un algorithme s'impose donc.
 
 ## En langage naturel :
 
+*Répond à la question c)*
+
 N initial = 2
 
 - 1 On démarre en splittant aléatoirement les exemples en N clusters (au moins 2 éléments par cluster) => si impossible, on retourne les derniers clusters obtenus
@@ -235,26 +241,26 @@ moyenne minimum.
 
 ## Complexité :
 
-- nbClusters défini (nbClustersMin = nbClustersMax)
 - `n` = nombre d'exemples
 - je ne compte pas l'affichage des matrices dans la complexité car il n'est
 pas du tout indispensable à l'algo
 
-| Etape                     | Meilleur cas       | Pire cas        | Cas général    | Remarques                                     |
-|---------------------------|--------------------|-----------------|----------------|-----------------------------------------------|
-| Calcul distances hamming  | n²                 | n²              | n²             | ((n*n) - n) / 2 = (n²-n) / 2                  |
-| Clusters random           | n                  | infini          | k . n          | **                                            |
-| Compare avec cluster      | 1                  | log(n)          | log(n)         | Chaque cluster contient log(n) éléments       |
-| Distances internes        | 1                  | n²              | log(n²)        | log((n²-n)/2)                                 |
-| Max distances internes    | 1                  | log(n)          | log(n)         | Complexité de l'ordre de 1 si déjà calculée   |
-| Min distances externes    | 1                  | n . log(n)      | n . log(n)     | Complexité de l'ordre de 1 si déjà calculée   |
-| Conditions satisfaites ?  | 1                  | n . log(n)      | n . log(n)     | Complexité de l'ordre de 1 si déjà calculée   |
-| Elément à déplacer ?      | 1                  | n . log (n) + n | 1              | Min distances internes est tjrs calculé avant |
-| Vers où déplacer ?        | k                  | k . log(n)      | k              | Distances externes déjà calculées             |
-| Transfère élément         | 1                  | 1               | 1              |                                               |
-| Ont tous 2 exemples ?     | k                  | k               | k              | k = nbClusters                                |
-| Boucle interne            | k                  | n . log(n)²     | n . log(n)²    |                                               |
-| Boucle principale         | k                  | n . log(n)²     | n . log(n)²    |                                               |
+| Etape                     | Meilleur cas       | Pire cas         | Cas général      | Remarques                                     |
+|---------------------------|--------------------|------------------|------------------|-----------------------------------------------|
+| Calcul distances hamming  | n²                 | n²               | n²               | ((n*n) - n) / 2 = (n²-n) / 2                  |
+| Clusters random           | n                  | infini           | k . n            | **                                            |
+| Compare avec cluster      | 1                  | log(n)           | log(n)           | Chaque cluster contient log(n) éléments       |
+| Distances internes        | 1                  | n²               | log(n²)          | log((n²-n)/2)                                 |
+| Max distances internes    | 1                  | log(n)           | log(n)           | Complexité de l'ordre de 1 si déjà calculée   |
+| Min distances externes    | 1                  | n . log(n)       | n . log(n)       | Complexité de l'ordre de 1 si déjà calculée   |
+| Conditions satisfaites ?  | 1                  | n . log(n)       | n . log(n)       | Complexité de l'ordre de 1 si déjà calculée   |
+| Elément à déplacer ?      | 1                  | n . log (n) + n  | 1                | Min distances internes est tjrs calculé avant |
+| Vers où déplacer ?        | k                  | k . log(n)       | k                | Distances externes déjà calculées             |
+| Transfère élément         | 1                  | 1                | 1                |                                               |
+| Ont tous 2 exemples ?     | k                  | k                | k                | k = nbClusters                                |
+| Boucle interne            | k                  | n . log(n)²      | n . log(n)²      |                                               |
+| Boucle principale         | k                  | n . log(n)²      | n . log(n)²      |                                               |
+| Programme                 | n²                 | n² + n . log(n)² | n² + n . log(n)² |                                               |
 
 ** Plus nbClusters s'approche de (n/2) et plus n est grand, plus k augmente
 
@@ -275,7 +281,9 @@ J'ai échangé sur nos algorithmes respectifs avec Théophile Cousin, et
 ## Temps passé (approximatif)
 
 Algo sur papier : 1h30
+
 Code : 3h
+
 Rapport : 1h30
 
 # Conclusion
