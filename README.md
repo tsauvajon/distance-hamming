@@ -243,7 +243,7 @@ pas du tout indispensable à l'algo
 | Etape                     | Meilleur cas       | Pire cas        | Cas général    | Remarques                                     |
 |---------------------------|--------------------|-----------------|----------------|-----------------------------------------------|
 | Calcul distances hamming  | n²                 | n²              | n²             | ((n*n) - n) / 2 = (n²-n) / 2                  |
-| Clusters random           | n                  | infini          | k . n          | *1                                            |
+| Clusters random           | n                  | infini          | k . n          | **                                            |
 | Compare avec cluster      | 1                  | log(n)          | log(n)         | Chaque cluster contient log(n) éléments       |
 | Distances internes        | 1                  | n²              | log(n²)        | log((n²-n)/2)                                 |
 | Max distances internes    | 1                  | log(n)          | log(n)         | Complexité de l'ordre de 1 si déjà calculée   |
@@ -251,8 +251,12 @@ pas du tout indispensable à l'algo
 | Conditions satisfaites ?  | 1                  | n . log(n)      | n . log(n)     | Complexité de l'ordre de 1 si déjà calculée   |
 | Elément à déplacer ?      | 1                  | n . log (n) + n | 1              | Min distances internes est tjrs calculé avant |
 | Vers où déplacer ?        | k                  | k . log(n)      | k              | Distances externes déjà calculées             |
+| Transfère élément         | 1                  | 1               | 1              |                                               |
+| Ont tous 2 exemples ?     | k                  | k               | k              | k = nbClusters                                |
+| Boucle interne            | k                  | n . log(n)²     | n . log(n)²    |                                               |
+| Boucle principale         | k                  | n . log(n)²     | n . log(n)²    |                                               |
 
-*1 Plus nbClusters s'approche de (n/2) et plus n est grand, plus k augmente
+** Plus nbClusters s'approche de (n/2) et plus n est grand, plus k augmente
 
 
 # Organisation
