@@ -278,14 +278,6 @@ J'ai discuté sur la phase "Crayon + papier" avec :
 J'ai échangé sur nos algorithmes respectifs avec Théophile Cousin, et 
 étudié son code sur https://github.com/theocousin/ai_hamming
 
-## Temps passé (approximatif)
-
-Algo sur papier : 1h30
-
-Code : 3h
-
-Rapport : 1h30
-
 # Conclusion
 
 ## Remarques
